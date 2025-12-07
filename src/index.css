@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 20% 6%;
+    --foreground: 120 100% 70%;
+
+    --card: 220 20% 10%;
+    --card-foreground: 120 100% 70%;
+
+    --popover: 220 20% 10%;
+    --popover-foreground: 120 100% 70%;
+
+    --primary: 120 100% 50%;
+    --primary-foreground: 220 20% 6%;
+
+    --secondary: 280 100% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 120 40% 50%;
+
+    --accent: 180 100% 50%;
+    --accent-foreground: 220 20% 6%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 50% 20%;
+    --input: 220 20% 15%;
+    --ring: 120 100% 50%;
+
+    --radius: 0.5rem;
+
+    /* Custom game colors */
+    --snake: 120 100% 50%;
+    --snake-glow: 120 100% 70%;
+    --food: 0 100% 60%;
+    --food-glow: 0 100% 70%;
+    --grid: 120 30% 15%;
+    --neon-pink: 320 100% 60%;
+    --neon-blue: 200 100% 60%;
+    --neon-yellow: 50 100% 60%;
+    
+    /* Gradients */
+    --gradient-game: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 25% 4%) 100%);
+    --gradient-neon: linear-gradient(90deg, hsl(120 100% 50%) 0%, hsl(180 100% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220 20% 12%) 0%, hsl(220 20% 8%) 100%);
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 120 100% 70%;
+    --sidebar-primary: 120 100% 50%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 120 100% 70%;
+    --sidebar-border: 120 50% 20%;
+    --sidebar-ring: 120 100% 50%;
+  }
+
+  .dark {
+    --background: 220 20% 6%;
+    --foreground: 120 100% 70%;
+    --card: 220 20% 10%;
+    --card-foreground: 120 100% 70%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 120 100% 70%;
+    --primary: 120 100% 50%;
+    --primary-foreground: 220 20% 6%;
+    --secondary: 280 100% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 120 40% 50%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 220 20% 6%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 120 50% 20%;
+    --input: 220 20% 15%;
+    --ring: 120 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-game;
+  }
+}
+
+@layer components {
+  .neon-text {
+    text-shadow: 
+      0 0 5px hsl(var(--primary)),
+      0 0 10px hsl(var(--primary)),
+      0 0 20px hsl(var(--primary)),
+      0 0 40px hsl(var(--primary));
+  }
+
+  .neon-box {
+    box-shadow: 
+      0 0 5px hsl(var(--primary)),
+      0 0 10px hsl(var(--primary)),
+      inset 0 0 5px hsl(var(--primary) / 0.3);
+  }
+
+  .neon-border {
+    border: 2px solid hsl(var(--primary));
+    box-shadow: 
+      0 0 5px hsl(var(--primary)),
+      0 0 10px hsl(var(--primary));
+  }
+
+  .pixel-corners {
+    clip-path: polygon(
+      0 8px, 8px 8px, 8px 0,
+      calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+      8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+    );
+  }
+
+  .scanlines {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      hsl(0 0% 0% / 0.1) 2px,
+      hsl(0 0% 0% / 0.1) 4px
+    );
+  }
+
+  .game-grid {
+    background-image: 
+      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .arcade-button {
+    @apply relative overflow-hidden transition-all duration-150;
+    background: linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(120 100% 35%) 100%);
+    box-shadow: 
+      0 4px 0 hsl(120 100% 25%),
+      0 0 10px hsl(var(--primary) / 0.5);
+  }
+
+  .arcade-button:hover {
+    transform: translateY(2px);
+    box-shadow: 
+      0 2px 0 hsl(120 100% 25%),
+      0 0 20px hsl(var(--primary) / 0.7);
+  }
+
+  .arcade-button:active {
+    transform: translateY(4px);
+    box-shadow: 
+      0 0 0 hsl(120 100% 25%),
+      0 0 30px hsl(var(--primary));
+  }
+}
+
+@layer utilities {
+  .animate-pulse-neon {
+    animation: pulse-neon 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-neon {
+    0%, 100% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+    50% {
+      opacity: 0.8;
+      filter: brightness(1.2);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary));
+    }
+    to {
+      box-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
+    }
+  }
+}
