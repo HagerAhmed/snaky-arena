@@ -18,9 +18,14 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(leaderboard.router)
-app.include_router(live.router)
+# Include routers with API prefix
+from fastapi import APIRouter
+api_router = APIRouter(prefix="/api/v1")
+api_router.include_router(auth.router)
+api_router.include_router(leaderboard.router)
+api_router.include_router(live.router)
+
+app.include_router(api_router)
 
 @app.get("/")
 async def root():

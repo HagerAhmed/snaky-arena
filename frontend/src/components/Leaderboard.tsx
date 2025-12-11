@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { leaderboardApi, LeaderboardEntry } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Trophy, Medal, Award, RefreshCw } from 'lucide-react';
@@ -7,26 +8,12 @@ import { cn } from '@/lib/utils';
 type FilterMode = 'all' | 'pass-through' | 'walls';
 
 export const Leaderboard = () => {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterMode>('all');
 
-  const fetchLeaderboard = async () => {
-    setLoading(true);
-    try {
-      const mode = filter === 'all' ? undefined : filter;
-      const data = await leaderboardApi.getLeaderboard(mode);
-      setEntries(data);
-    } catch (err) {
-      console.error('Failed to fetch leaderboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [filter]);
+  const { data: entries = [], isLoading, refetch } = useQuery({
+    queryKey: ['leaderboard', filter],
+    queryFn: () => leaderboardApi.getLeaderboard(filter === 'all' ? undefined : filter),
+  });
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -49,13 +36,13 @@ export const Leaderboard = () => {
           <Trophy className="w-8 h-8 text-neon-yellow" />
           <h1 className="text-2xl font-game neon-text">LEADERBOARD</h1>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={fetchLeaderboard}
-          disabled={loading}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => refetch()}
+          disabled={isLoading}
         >
-          <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+          <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
         </Button>
       </div>
 
@@ -85,7 +72,7 @@ export const Leaderboard = () => {
         </div>
 
         {/* Entries */}
-        {loading ? (
+        {isLoading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-primary" />
           </div>

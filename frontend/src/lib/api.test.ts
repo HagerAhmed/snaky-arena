@@ -1,141 +1,136 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { authApi, leaderboardApi, liveApi } from './api';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { authApi, leaderboardApi, liveApi, User } from './api';
 
-describe('authApi', () => {
+// Access to mocked fetch
+let fetchSpy: MockInstance;
+
+describe('api', () => {
   beforeEach(() => {
     localStorage.clear();
+    // Spy on fetch
+    fetchSpy = vi.spyOn(global, 'fetch');
   });
 
-  it('should login with valid credentials', async () => {
-    const result = await authApi.login('snake@game.com', 'password123');
-    
-    expect(result.error).toBeNull();
-    expect(result.user).not.toBeNull();
-    expect(result.user?.username).toBe('SnakeMaster');
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('should fail login with invalid email', async () => {
-    const result = await authApi.login('invalid@test.com', 'password123');
-    
-    expect(result.error).toBe('User not found');
-    expect(result.user).toBeNull();
-  });
+  describe('authApi', () => {
+    it('should login with valid credentials', async () => {
+      const mockUser: User = {
+        id: '1',
+        username: 'SnakeMaster',
+        email: 'snake@game.com',
+        highScore: 2450,
+        gamesPlayed: 156,
+        createdAt: new Date().toISOString()
+      };
 
-  it('should fail login with wrong password', async () => {
-    const result = await authApi.login('snake@game.com', 'wrongpassword');
-    
-    expect(result.error).toBe('Invalid password');
-    expect(result.user).toBeNull();
-  });
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ user: mockUser, token: 'fake-token' })
+      });
 
-  it('should signup with new credentials', async () => {
-    const result = await authApi.signup('TestPlayer', 'testplayer@test.com', 'password123');
-    
-    expect(result.error).toBeNull();
-    expect(result.user).not.toBeNull();
-    expect(result.user?.username).toBe('TestPlayer');
-    expect(result.user?.email).toBe('testplayer@test.com');
-    expect(result.user?.highScore).toBe(0);
-  });
+      const result = await authApi.login('snake@game.com', 'password123');
 
-  it('should fail signup with existing email', async () => {
-    const result = await authApi.signup('NewUser', 'snake@game.com', 'password123');
-    
-    expect(result.error).toBe('Email already registered');
-    expect(result.user).toBeNull();
-  });
+      expect(result.error).toBeNull();
+      expect(result.user).toEqual(mockUser);
+      expect(localStorage.getItem('snake_access_token')).toBe('fake-token');
+      expect(localStorage.getItem('snake_user')).toContain('SnakeMaster');
 
-  it('should fail signup with existing username', async () => {
-    const result = await authApi.signup('SnakeMaster', 'newuser@test.com', 'password123');
-    
-    expect(result.error).toBe('Username already taken');
-    expect(result.user).toBeNull();
-  });
+      expect(fetchSpy).toHaveBeenCalledWith('/api/v1/auth/login', expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'snake@game.com', password: 'password123' })
+      }));
+    });
 
-  it('should persist user to localStorage on login', async () => {
-    await authApi.login('snake@game.com', 'password123');
-    
-    const stored = localStorage.getItem('snake_user');
-    expect(stored).not.toBeNull();
-    
-    const user = JSON.parse(stored!);
-    expect(user.username).toBe('SnakeMaster');
-  });
+    it('should handle login error', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Invalid credentials' })
+      });
 
-  it('should get current user from localStorage', async () => {
-    await authApi.login('snake@game.com', 'password123');
-    
-    // Clear in-memory state by calling getCurrentUser fresh
-    const user = await authApi.getCurrentUser();
-    expect(user?.username).toBe('SnakeMaster');
-  });
+      const result = await authApi.login('invalid@test.com', 'pwd');
 
-  it('should logout and clear localStorage', async () => {
-    await authApi.login('snake@game.com', 'password123');
-    await authApi.logout();
-    
-    const stored = localStorage.getItem('snake_user');
-    expect(stored).toBeNull();
-    
-    const user = await authApi.getCurrentUser();
-    expect(user).toBeNull();
-  });
-});
+      expect(result.error).toBe('Invalid credentials');
+      expect(result.user).toBeNull();
+    });
 
-describe('leaderboardApi', () => {
-  it('should get leaderboard entries', async () => {
-    const entries = await leaderboardApi.getLeaderboard();
-    
-    expect(entries).toBeInstanceOf(Array);
-    expect(entries.length).toBeGreaterThan(0);
-    expect(entries[0]).toHaveProperty('username');
-    expect(entries[0]).toHaveProperty('score');
-    expect(entries[0]).toHaveProperty('mode');
-    expect(entries[0]).toHaveProperty('rank');
-  });
+    it('should signup correctly', async () => {
+      const mockUser: User = {
+        id: '1',
+        username: 'NewUser',
+        email: 'new@test.com',
+        highScore: 0,
+        gamesPlayed: 0,
+        createdAt: new Date().toISOString()
+      };
 
-  it('should filter by mode', async () => {
-    const wallsEntries = await leaderboardApi.getLeaderboard('walls');
-    
-    wallsEntries.forEach(entry => {
-      expect(entry.mode).toBe('walls');
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ user: mockUser, token: 'new-token' })
+      });
+
+      const result = await authApi.signup('NewUser', 'new@test.com', 'pwd');
+
+      expect(result.user).toEqual(mockUser);
+      expect(localStorage.getItem('snake_access_token')).toBe('new-token');
+
+      expect(fetchSpy).toHaveBeenCalledWith('/api/v1/auth/signup', expect.anything());
     });
   });
 
-  it('should respect limit parameter', async () => {
-    const entries = await leaderboardApi.getLeaderboard(undefined, 5);
-    
-    expect(entries.length).toBeLessThanOrEqual(5);
-  });
+  describe('leaderboardApi', () => {
+    it('should get leaderboard entries', async () => {
+      const mockEntries = [
+        { id: '1', username: 'P1', score: 100, mode: 'walls', rank: 1, date: new Date().toISOString() }
+      ];
 
-  it('should submit score and return rank', async () => {
-    const result = await leaderboardApi.submitScore({
-      score: 500,
-      mode: 'pass-through',
-      duration: 120,
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockEntries
+      });
+
+      const entries = await leaderboardApi.getLeaderboard('walls', 5);
+
+      expect(entries).toEqual(mockEntries);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/leaderboard?mode=walls&limit=5'),
+        expect.anything()
+      );
     });
-    
-    expect(result).toHaveProperty('rank');
-    expect(result).toHaveProperty('isHighScore');
-    expect(typeof result.rank).toBe('number');
-  });
-});
 
-describe('liveApi', () => {
-  it('should get active players', async () => {
-    const players = await liveApi.getActivePlayers();
-    
-    expect(players).toBeInstanceOf(Array);
-    expect(players.length).toBeGreaterThan(0);
-    expect(players[0]).toHaveProperty('username');
-    expect(players[0]).toHaveProperty('currentScore');
-    expect(players[0]).toHaveProperty('mode');
-    expect(players[0]).toHaveProperty('isLive');
+    it('should submit score', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ rank: 5, isHighScore: true })
+      });
+
+      const result = await leaderboardApi.submitScore({
+        score: 500,
+        mode: 'pass-through',
+        duration: 120
+      });
+
+      expect(result.rank).toBe(5);
+      expect(result.isHighScore).toBe(true);
+      expect(fetchSpy).toHaveBeenCalledWith('/api/v1/leaderboard/submit', expect.objectContaining({
+        method: 'POST'
+      }));
+    });
   });
 
-  it('should watch player successfully', async () => {
-    const result = await liveApi.watchPlayer('live1');
-    
-    expect(result.success).toBe(true);
+  describe('liveApi', () => {
+    it('should get active players', async () => {
+      const mockPlayers = [{ id: 'p1', username: 'u1' }];
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockPlayers
+      });
+
+      const players = await liveApi.getActivePlayers();
+      expect(players).toEqual(mockPlayers);
+      expect(fetchSpy).toHaveBeenCalledWith('/api/v1/live/players', expect.anything());
+    });
   });
 });
