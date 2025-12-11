@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from ..models import UserCreate, UserLogin, AuthResponse, Error, User
-from ..db import db
+from ..database import get_db
+from ..db import get_db_instance
 from ..dependencies import create_access_token, get_current_user
 
 router = APIRouter(
@@ -11,7 +13,8 @@ router = APIRouter(
 )
 
 @router.post("/signup", response_model=AuthResponse, status_code=201, responses={400: {"model": Error}})
-async def signup(user: UserCreate):
+async def signup(user: UserCreate, session: Session = Depends(get_db)):
+    db = get_db_instance(session)
     db_user = db.create_user(user)
     if not db_user:
         return JSONResponse(
@@ -23,7 +26,8 @@ async def signup(user: UserCreate):
     return {"user": db_user, "token": access_token}
 
 @router.post("/login", response_model=AuthResponse, responses={401: {"model": Error}})
-async def login(user_in: UserLogin):
+async def login(user_in: UserLogin, session: Session = Depends(get_db)):
+    db = get_db_instance(session)
     user_dict = db.get_user_by_email(user_in.email)
     if not user_dict or not db.verify_password(user_in.password, user_dict["hashed_password"]):
          return JSONResponse(

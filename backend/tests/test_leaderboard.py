@@ -1,5 +1,5 @@
 def test_get_leaderboard(client):
-    response = client.get("/leaderboard")
+    response = client.get("/api/v1/leaderboard")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
@@ -10,7 +10,7 @@ def test_submit_score(client, test_user_token):
         "mode": "walls",
         "duration": 60
     }
-    response = client.post("/leaderboard/submit", json=score_data, headers=headers)
+    response = client.post("/api/v1/leaderboard/submit", json=score_data, headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "rank" in data

@@ -8,9 +8,11 @@ dependencies = [
     "email-validator",
     "fastapi",
     "passlib[bcrypt]",
+    "psycopg2-binary>=2.9.11",
     "pydantic",
     "pyjwt",
     "python-multipart",
+    "sqlalchemy>=2.0.45",
     "uvicorn",
 ]
 

@@ -3,7 +3,9 @@ from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt.exceptions import PyJWTError
 from typing import Optional
-from .db import db
+from sqlalchemy.orm import Session
+from .database import get_db
+from .db import get_db_instance
 from .models import User
 
 SECRET_KEY = "supersecretkey" # In production, this should be env var
@@ -17,7 +19,10 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    session: Session = Depends(get_db)
+) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -30,7 +35,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
             raise credentials_exception
     except PyJWTError:
         raise credentials_exception
-        
+    
+    db = get_db_instance(session)
     user_dict = db.get_user_by_email(email)
     if user_dict is None:
         raise credentials_exception
