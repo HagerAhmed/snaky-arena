@@ -58,3 +58,14 @@ If you want to run the services individually for development:
 - **Backend**: FastAPI, Python 3.12.
 - **Database**: PostgreSQL (Production/Docker), SQLite (Local Dev default).
 - **Deployment**: Docker (Single container serving both API and Static assets).
+
+## ☁️ Deployment (Render)
+
+This project includes a `render.yaml` Blueprint for easy deployment on [Render](https://render.com).
+
+1.  **Push to GitHub**: Ensure your code is in a GitHub repository.
+2.  **Render Dashboard**: Go to the [Render Dashboard](https://dashboard.render.com).
+3.  **New Blueprint**: Click **New +** -> **Blueprint**.
+4.  **Connect Repo**: Select your repository.
+5.  **Apply**: Render will automatically detect `render.yaml` and prompt you to apply the changes.
+6.  **Done**: It will create the **Web Service** and **Postgres Database** for you.
