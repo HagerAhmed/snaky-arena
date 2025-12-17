@@ -69,10 +69,19 @@ if os.path.exists("static"):
     # Catch-all route for SPA (React Router)
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        # Allow API requests to pass through
+        # Allow API requests to pass through (if not matched by api_router)
         if full_path.startswith("api"):
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="Not Found")
+
+        # Explicitly serve docs if hidden by catch-all
+        if full_path == "docs":
+            from fastapi.openapi.docs import get_swagger_ui_html
+            return get_swagger_ui_html(openapi_url="/openapi.json", title="Snaky Arena API")
+
+        if full_path == "openapi.json":
+            from fastapi.responses import JSONResponse
+            return JSONResponse(app.openapi())
         
         # Check if file exists in static folder (e.g. assets/index.css)
         file_path = os.path.join("static", full_path)
