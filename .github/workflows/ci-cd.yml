@@ -55,8 +55,49 @@ jobs:
       - name: Run Frontend Tests
         run: npm test
 
+  integration-test-backend:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          pip install pytest httpx pytest-asyncio psycopg2-binary
+
+      - name: Run Integration Tests
+        env:
+          TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+        run: pytest
+
   deploy:
-    needs: [test-backend, test-frontend]
+    needs: [test-backend, test-frontend, integration-test-backend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:

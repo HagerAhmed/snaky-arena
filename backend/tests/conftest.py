@@ -17,11 +17,24 @@ from app.db_models import UserModel, ScoreModel, ActivePlayerModel
 
 # Create test database engine (in-memory SQLite with special pooling)
 # StaticPool ensures the same connection is reused across requests
-TEST_DATABASE_URL = "sqlite:///:memory:"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+
+connect_args = {}
+pool_class = None
+
+if "sqlite" in TEST_DATABASE_URL:
+    connect_args = {"check_same_thread": False}
+    pool_class = StaticPool
+
+engine_args = {
+    "connect_args": connect_args,
+}
+if pool_class:
+    engine_args["poolclass"] = pool_class
+
 engine = create_engine(
     TEST_DATABASE_URL, 
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool  # Keeps the same connection, preventing in-memory DB loss
+    **engine_args
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
