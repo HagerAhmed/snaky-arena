@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAuth } from './useAuth';
 import { authApi } from '@/lib/api';
+import { AuthProvider } from '@/components/AuthProvider';
+import { ReactNode } from 'react';
 
 // Utility to wait for async state updates
 const waitFor = async (callback: () => void, timeout = 1000) => {
@@ -36,7 +38,7 @@ describe('useAuth', () => {
   it('should start with no user and loading state', async () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     expect(result.current.loading).toBe(true);
     expect(result.current.user).toBeNull();
@@ -50,7 +52,7 @@ describe('useAuth', () => {
     const mockUser = { id: '1', username: 'Test', email: 'test@test.com', highScore: 100, gamesPlayed: 5, createdAt: new Date() };
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(mockUser);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.user).toEqual(mockUser);
@@ -62,7 +64,7 @@ describe('useAuth', () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(null);
     vi.mocked(authApi.login).mockResolvedValue({ user: mockUser, error: null });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -82,7 +84,7 @@ describe('useAuth', () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(null);
     vi.mocked(authApi.login).mockResolvedValue({ user: null, error: 'Invalid password' });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -103,7 +105,7 @@ describe('useAuth', () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(null);
     vi.mocked(authApi.signup).mockResolvedValue({ user: mockUser, error: null });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -123,7 +125,7 @@ describe('useAuth', () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(mockUser);
     vi.mocked(authApi.logout).mockResolvedValue();
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.user).toEqual(mockUser);
@@ -140,7 +142,7 @@ describe('useAuth', () => {
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(null);
     vi.mocked(authApi.login).mockResolvedValue({ user: null, error: 'Some error' });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
