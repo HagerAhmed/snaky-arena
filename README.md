@@ -69,3 +69,12 @@ This project includes a `render.yaml` Blueprint for easy deployment on [Render](
 4.  **Connect Repo**: Select your repository.
 5.  **Apply**: Render will automatically detect `render.yaml` and prompt you to apply the changes.
 6.  **Done**: It will create the **Web Service** and **Postgres Database** for you.
+
+## 🔄 CI/CD Pipeline
+
+Automated with GitHub Actions (`.github/workflows/ci-cd.yml`):
+1.  **Tests**: Runs Backend Unit Tests, Backend Integration Tests (with Postgres), and Frontend Tests on every push.
+2.  **Deploy**: Automatically triggers deployment to Render only if all tests pass on the `main` branch.
+
+**Setup**:
+-   Add `RENDER_DEPLOY_HOOK_URL` to your GitHub Repository Secrets (Settings -> Secrets -> Actions).
