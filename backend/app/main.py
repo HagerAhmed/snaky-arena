@@ -55,3 +55,27 @@ app.include_router(api_router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to Snaky Arena API"}
+
+# Mount the static directory
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Verify if static directory exists (it will in Docker)
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
+    # Catch-all route for SPA (React Router)
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Allow API requests to pass through
+        if full_path.startswith("api"):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Not Found")
+        
+        # Check if file exists in static folder (e.g. assets/index.css)
+        file_path = os.path.join("static", full_path)
+        if os.path.exists(file_path):
+            return FileResponse(file_path)
+            
+        # Fallback to index.html
+        return FileResponse("static/index.html")
