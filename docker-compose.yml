@@ -11,23 +11,15 @@ services:
     ports:
       - "5432:5432"
 
-  backend:
-    build: ./backend
+  app:
+    build: .
     restart: always
     environment:
       DATABASE_URL: postgresql://user:password@db/snaky_arena
     depends_on:
       - db
     ports:
-      - "8000:8000"
-
-  frontend:
-    build: ./frontend
-    restart: always
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
+      - "8080:8000"
 
 volumes:
   postgres_data:
