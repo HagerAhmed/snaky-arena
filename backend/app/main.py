@@ -54,6 +54,8 @@ app.include_router(api_router)
 
 @app.get("/")
 async def root():
+    if os.path.exists("static/index.html"):
+        return FileResponse("static/index.html")
     return {"message": "Welcome to Snaky Arena API"}
 
 # Mount the static directory
